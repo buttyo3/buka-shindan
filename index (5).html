@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>部下タイプ診断 | ぶっちょさん</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif;background:#f7f7f5;color:#1a1a1a;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px}
+.wrap{width:100%;max-width:520px}
+.header{margin-bottom:28px}
+.label{font-size:11px;font-weight:500;letter-spacing:.08em;color:#888;text-transform:uppercase;margin-bottom:6px}
+.title{font-size:24px;font-weight:500;color:#1a1a1a;line-height:1.3;margin-bottom:8px}
+.sub{font-size:14px;color:#666;line-height:1.6}
+.prog-wrap{margin-bottom:28px}
+.prog-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.prog-step{font-size:13px;font-weight:500;color:#1a1a1a}
+.prog-pct{font-size:12px;color:#888}
+.prog-track{height:3px;background:#e5e5e3;border-radius:2px}
+.prog-fill{height:3px;background:#1a1a1a;border-radius:2px;transition:width .4s cubic-bezier(.4,0,.2,1)}
+.q-card{background:#fff;border:1px solid #e5e5e3;border-radius:16px;padding:24px;margin-bottom:16px}
+.q-text{font-size:15px;font-weight:500;color:#1a1a1a;line-height:1.7}
+.opts{display:flex;flex-direction:column;gap:8px;margin-top:20px}
+.opt{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;border:1px solid #e5e5e3;background:#fff;cursor:pointer;transition:border-color .15s,background .15s}
+.opt:hover{border-color:#aaa;background:#fafafa}
+.opt.sel{border-color:#1a1a1a;background:#fafafa}
+.opt-dot{width:18px;height:18px;border-radius:50%;border:1.5px solid #ccc;flex-shrink:0;transition:all .15s;display:flex;align-items:center;justify-content:center}
+.opt.sel .opt-dot{border-color:#1a1a1a;background:#1a1a1a}
+.opt-check{width:7px;height:7px;border-radius:50%;background:#fff;opacity:0;transition:opacity .15s}
+.opt.sel .opt-check{opacity:1}
+.opt-label{font-size:14px;color:#1a1a1a}
+.nav{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.btn-prev{background:none;border:1px solid #e5e5e3;border-radius:8px;padding:10px 20px;font-size:14px;color:#666;cursor:pointer;font-family:inherit}
+.btn-prev:hover{background:#f0f0ee}
+.btn-next{background:#1a1a1a;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:500;color:#fff;cursor:pointer;font-family:inherit;transition:opacity .15s}
+.btn-next:disabled{opacity:.3;cursor:not-allowed}
+.score-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.score-card{background:#fff;border:1px solid #e5e5e3;border-radius:12px;padding:14px 16px}
+.score-name{font-size:11px;color:#888;margin-bottom:4px;letter-spacing:.06em;text-transform:uppercase}
+.score-num{font-size:22px;font-weight:500;color:#1a1a1a}
+.score-sub{font-size:11px;color:#888;font-weight:400}
+.score-bar-wrap{margin-top:8px;height:3px;background:#e5e5e3;border-radius:2px}
+.score-bar-fill{height:3px;border-radius:2px;background:#1a1a1a}
+.res-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;border:1px solid #e5e5e3;font-size:12px;font-weight:500;color:#666;margin-bottom:12px}
+.res-type{font-size:20px;font-weight:500;color:#1a1a1a;line-height:1.4;margin-bottom:8px}
+.res-desc{font-size:14px;color:#666;line-height:1.7;margin-bottom:4px}
+.section{border-top:1px solid #e5e5e3;padding-top:20px;margin-top:20px}
+.section-label{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#888;margin-bottom:10px}
+.section-body{font-size:14px;color:#555;line-height:1.8}
+.line-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;background:#06C755;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;margin-top:28px;font-family:inherit;text-decoration:none}
+.line-hint{font-size:12px;color:#888;text-align:center;margin-top:8px}
+.retry-btn{display:block;width:100%;padding:12px;background:none;border:1px solid #e5e5e3;border-radius:12px;font-size:14px;color:#666;cursor:pointer;margin-top:10px;font-family:inherit}
+.retry-btn:hover{background:#f0f0ee}
+.phrases{list-style:none;border-top:1px solid #e5e5e3}
+.phrases li{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #e5e5e3;padding:10px 0}
+.phrases span{font-size:14px;color:#1a1a1a;line-height:1.7}
+.copy-btn{flex-shrink:0;background:none;border:1px solid #e5e5e3;border-radius:20px;padding:4px 12px;font-size:12px;color:#666;cursor:pointer;font-family:inherit;white-space:nowrap}
+.copy-btn:hover{background:#f0f0ee}
+.copy-btn.done{color:#05A548;border-color:#05A548}
+.ng-list{list-style:none;display:flex;flex-direction:column;gap:12px}
+.ng-word{font-size:14px;color:#1a1a1a;line-height:1.6}
+.ng-why{font-size:13px;color:#888;line-height:1.6;margin-top:2px}
+.scenes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.scene{background:#fff;border:1px solid #e5e5e3;border-radius:12px;padding:14px 16px}
+.scene-name{font-size:12px;font-weight:500;color:#888;margin-bottom:4px}
+.scene-body{font-size:14px;color:#1a1a1a;line-height:1.7}
+@media (max-width:480px){.scenes{grid-template-columns:1fr}}
+.back-btn{display:block;width:100%;padding:14px;background:#1a1a1a;color:#fff;border-radius:12px;font-size:15px;font-weight:500;text-align:center;text-decoration:none;margin-top:10px}
+.back-btn:hover{opacity:.85}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+const Qs=[
+  {text:"この部下は、仕事の指示を出すと積極的に取り組もうとする",axis:"m"},
+  {text:"この部下は、任された業務を自分一人でやり遂げることができる",axis:"a"},
+  {text:"この部下は、自分から上司に相談や報告をしに来る",axis:"m"},
+  {text:"この部下は、初めての業務でも手順を理解してこなせる",axis:"a"},
+  {text:"この部下は、仕事に対して前向きな言葉が多い",axis:"m"},
+  {text:"この部下は、トラブルが起きたときに自分で解決策を考えられる",axis:"a"},
+  {text:"この部下は、目標を与えると達成しようと努力する",axis:"m"},
+  {text:"この部下は、業務の優先順位を自分で判断して動ける",axis:"a"},
+  {text:"この部下は、チームのために自分から行動することがある",axis:"m"},
+  {text:"この部下は、新しいスキルや知識を習得するのが早い",axis:"a"},
+  {text:"この部下は、上司からの評価や承認をモチベーションにしている様子がある",axis:"m"},
+  {text:"この部下は、業務の質が安定していて、ミスが少ない",axis:"a"},
+  {text:"この部下は、仕事に対して「やりたい」という気持ちが伝わってくる",axis:"m"},
+  {text:"この部下は、複数の業務を同時にこなすマルチタスクができる",axis:"a"},
+  {text:"この部下は、将来のキャリアや成長に対して意欲的に話すことがある",axis:"m"},
+];
+const Opts=[
+  {l:"全くそう思わない",v:1},
+  {l:"あまりそう思わない",v:2},
+  {l:"どちらとも言えない",v:3},
+  {l:"ややそう思う",v:4},
+  {l:"とてもそう思う",v:5},
+];
+const R={
+  D1:{type:"D1タイプ　指示型（S1）でいこう",desc:"やる気はあるけど、まだできない段階にいます。意欲は高いものの、経験やスキルがまだ追いついていない状態です。",mgmt:"今日やること・明日やることを細かくスケジューリングして、何時に何をやるかまで一緒に決めてあげましょう。マイクロマネジメントに見えるかもしれませんが、D1の部下にはこれが一番効きます。自転車の乗り方を知らない人に「自分で考えて」と言っても危ない。まず乗り方を教えること、それが今の優先事項です。",point:"「これをやりましょう」が通じるタイプです。やる気があるうちに、正しい型を身につけさせてあげてください。"},
+  D2:{type:"D2タイプ　コーチ型（S2）でいこう",desc:"やる気が落ちてきて、成果も出ていない段階にいます。伸び悩みの時期で、何をしても空回りしている感覚を持っているかもしれません。",mgmt:"まず「やれる気」を作ることが先決です。10ある業務のうち、まず1だけを完璧にやらせる。できたら即座に褒めて認める。そして「次はこれもできそうだよ」とちらつかせる。このベイビーステップを繰り返すことで、やれる気が生まれ、行動が出て、成果につながっていきます。",point:"大前提として、あなたとこの部下の関係性が良好であることが必要です。関係に問題がある場合は、まずそこから修復しましょう。"},
+  D3:{type:"D3タイプ　援助型（S3）でいこう",desc:"能力はあるけど、なかなか動き出せない段階にいます。心の中では「自分はできる」と思っているのに、失敗を恐れて行動が出てこないタイプです。",mgmt:"できるだけ大きな裁量を与えることが鍵です。「この仕事はあなたに任せる」という言葉で、責任感が生まれてモチベーションが上がります。隣で伴走しながら「頑張ってるね」「いいね」「この仕事は価値があるよ」という言葉をかけ続けてください。",point:"年次が上がるほどD3になりやすい傾向があります。指示型で接すると逆効果になるので注意が必要です。"},
+  D4:{type:"D4タイプ　委任型（S4）でいこう",desc:"能力もあって、やる気もあるエース段階にいます。自分で考えて動ける、組織の中心になれる人材です。",mgmt:"口出しをほぼしないことに徹しましょう。細かく指示を出すと「信頼されていない」と感じさせてしまい、逆にパフォーマンスが落ちます。定期的な壁打ちを月1回程度行い、方向性がずれていないかだけ確認する程度にとどめてください。",point:"D4の部下を潰す一番の原因は「管理しすぎること」です。任せる勇気を持ちましょう。"},
+};
+
+/* ===== 診断結果に追加で表示する内容（ここを編集すれば反映されます） =====
+   say    : 言うといい言葉（コピーボタン付き）
+   ng     : 避けたい言葉 [言葉, 理由]
+   scenes : 場面別の関わり方 [場面, 関わり方]
+*/
+const EXTRA={
+  D1:{
+    say:[
+      "今日はこれとこれをやろう。10時までに1つ目、終わったら一度見せて",
+      "最初はこのやり方どおりでいい。慣れたら自分流にしていこう",
+      "わからないところを「わからない」と言ってくれるのが、一番助かる",
+      "さっきの、手順を飛ばさずにできてたね",
+    ],
+    ng:[
+      ["自分で考えてやってみて","考える材料がまだないので、止まってしまいます"],
+      ["前にも言ったよね","聞きに来なくなります"],
+      ["任せるから好きにやって","D1にとっては「放置」です"],
+    ],
+    scenes:[
+      ["指示を出すとき","ゴール・やり方・期限をセットで伝える。「困ったらここで止まって相談してね」と止まる場所も決めておく"],
+      ["ミスしたとき","「どこまでは合ってたか、一緒に見よう」。できていた部分から確認する"],
+      ["褒めるとき","結果より行動を具体的に。「確認を毎回入れてたね」"],
+      ["1on1で聞くこと","「今、一番わからないことは何？」"],
+    ],
+  },
+  D2:{
+    say:[
+      "今週はこの1つだけでいい。ほかはいったんこっちで持つよ",
+      "最近ちょっとしんどそうに見えるけど、どう？",
+      "できたね。これができるなら、次のこれもいけると思う",
+      "うまくいってないのは、あなただけのせいじゃない。やり方を一緒に変えよう",
+    ],
+    ng:[
+      ["なんでできないの？","理由を聞いているつもりでも、責められていると受け取られます"],
+      ["もっと頑張ろう","頑張り方がわからない人には届きません"],
+      ["○○さんはできてるよ","比べられると、心を閉じます"],
+    ],
+    scenes:[
+      ["指示を出すとき","仕事を小さく区切って、1つずつ渡す。一度にたくさん渡さない"],
+      ["ミスしたとき","原因探しより「次どうするか」だけを話す"],
+      ["褒めるとき","小さな完了を、その日のうちに"],
+      ["1on1で聞くこと","「最近、ちょっとでも手応えがあった仕事ってある？」"],
+    ],
+  },
+  D3:{
+    say:[
+      "この件はあなたに任せたい。進め方も含めて",
+      "あなたならどう進める？",
+      "その判断でいいと思う。何かあったら責任はこっちで持つ",
+      "この仕事、チームにとって大きいよ",
+    ],
+    ng:[
+      ["まずこれやって、次にこれ","「信用されていない」と受け取られます"],
+      ["失敗しないようにね","余計に動けなくなります"],
+      ["なんでやらないの？","できないのではなく、怖いだけのことが多いです"],
+    ],
+    scenes:[
+      ["指示を出すとき","指示ではなく相談の形で。「どうしたらいいと思う？」"],
+      ["ミスしたとき","「挑戦した結果ならOK。何がわかった？」"],
+      ["褒めるとき","成果よりも、その仕事の価値や周りへの貢献を伝える"],
+      ["1on1で聞くこと","「今、ブレーキになっているものってある？」"],
+    ],
+  },
+  D4:{
+    say:[
+      "任せた。気になることがあったら言って",
+      "この先、どんな仕事をやってみたい？",
+      "そのやり方、チームに共有してもらえない？",
+      "最近、何か困ってない？",
+    ],
+    ng:[
+      ["進捗どう？（毎日）","管理しすぎが、D4を潰す一番の原因です"],
+      ["あなたなら大丈夫でしょ","任せるのと、放っておくのは違います"],
+      ["細かい報告の要求","エースの時間を奪います"],
+    ],
+    scenes:[
+      ["指示を出すとき","目的と期限だけを伝える。やり方は任せる"],
+      ["ミスしたとき","振り返りも本人に任せる。「何か手伝えることある？」だけ聞く"],
+      ["褒めるとき","周りへの影響を伝える。人づてに褒めるのも効きます"],
+      ["1on1で聞くこと","キャリアの話。「1年後、どうなっていたい？」"],
+    ],
+  },
+};
+/* 特典ページのURL（戻るボタンの行き先） */
+const TOKUTEN_URL="https://buttyo3.github.io/buttyo-lp/tokuten/";
+let cur=0,ans=new Array(Qs.length).fill(null);
+function getType(m,a){const mH=m>=3.5,aH=a>=3.5;if(mH&&!aH)return"D1";if(!mH&&!aH)return"D2";if(!mH&&aH)return"D3";return"D4";}
+function calcScores(){let mt=0,mc=0,at=0,ac=0;Qs.forEach((q,i)=>{if(ans[i]!==null){if(q.axis==="m"){mt+=ans[i];mc++;}else{at+=ans[i];ac++;}}});return{m:mc?mt/mc:0,a:ac?at/ac:0};}
+function pct(){return Math.round((cur/Qs.length)*100)}
+function renderQ(){
+  const q=Qs[cur];
+  document.getElementById("app").innerHTML=`
+    <div class="header">
+      <div class="label">部下タイプ診断</div>
+      <div class="title">あなたの部下は<br>どのタイプ？</div>
+      <div class="sub">15問に答えて部下のマネジメントタイプを診断します</div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-meta">
+        <span class="prog-step">質問 ${cur+1} / ${Qs.length}</span>
+        <span class="prog-pct">${pct()}%</span>
+      </div>
+      <div class="prog-track"><div class="prog-fill" style="width:${pct()}%"></div></div>
+    </div>
+    <div class="q-card">
+      <div class="q-text">${q.text}</div>
+      <div class="opts">
+        ${Opts.map(o=>`<div class="opt${ans[cur]===o.v?" sel":""}" onclick="sel(${o.v})">
+          <div class="opt-dot"><div class="opt-check"></div></div>
+          <span class="opt-label">${o.l}</span>
+        </div>`).join("")}
+      </div>
+    </div>
+    <div class="nav">
+      <button class="btn-prev" onclick="prev()" style="${cur===0?"visibility:hidden":""}">← 戻る</button>
+      <button class="btn-next" id="nb" onclick="next()" ${ans[cur]===null?"disabled":""}>${cur===Qs.length-1?"診断する →":"次へ →"}</button>
+    </div>`;
+}
+function sel(v){ans[cur]=v;document.querySelectorAll(".opt").forEach((el,i)=>{el.classList.toggle("sel",Opts[i].v===v);});document.getElementById("nb").disabled=false;}
+function next(){if(ans[cur]===null)return;if(cur<Qs.length-1){cur++;renderQ();}else renderResult();}
+function prev(){if(cur>0){cur--;renderQ();}}
+function renderResult(){
+  const{m,a}=calcScores();
+  const type=getType(m,a);
+  const r=R[type];
+  const x=EXTRA[type];
+  const mp=Math.round((m/5)*100);
+  const ap=Math.round((a/5)*100);
+  document.getElementById("app").innerHTML=`
+    <div class="header">
+      <div class="label">診断結果</div>
+      <div class="title">診断が完了しました</div>
+    </div>
+    <div class="score-row">
+      <div class="score-card">
+        <div class="score-name">モチベーション</div>
+        <div class="score-num">${m.toFixed(1)}<span class="score-sub"> / 5.0</span></div>
+        <div class="score-bar-wrap"><div class="score-bar-fill" style="width:${mp}%"></div></div>
+      </div>
+      <div class="score-card">
+        <div class="score-name">能力</div>
+        <div class="score-num">${a.toFixed(1)}<span class="score-sub"> / 5.0</span></div>
+        <div class="score-bar-wrap"><div class="score-bar-fill" style="width:${ap}%"></div></div>
+      </div>
+    </div>
+    <div>
+      <div class="res-tag">${type}</div>
+      <div class="res-type">${r.type}</div>
+      <div class="res-desc">${r.desc}</div>
+    </div>
+    <div class="section">
+      <div class="section-label">関わり方</div>
+      <div class="section-body">${r.mgmt}</div>
+    </div>
+    <div class="section">
+      <div class="section-label">ポイント</div>
+      <div class="section-body">${r.point}</div>
+    </div>
+    <div class="section">
+      <div class="section-label">言うといい言葉</div>
+      <ul class="phrases">${x.say.map(t=>`<li><span>「${t}」</span><button type="button" class="copy-btn" data-t="${t.replace(/"/g,"&quot;")}">コピー</button></li>`).join("")}</ul>
+    </div>
+    <div class="section">
+      <div class="section-label">避けたい言葉</div>
+      <ul class="ng-list">${x.ng.map(([w,why])=>`<li><div class="ng-word">「${w}」</div><div class="ng-why">${why}</div></li>`).join("")}</ul>
+    </div>
+    <div class="section">
+      <div class="section-label">場面別の関わり方</div>
+      <div class="scenes">${x.scenes.map(([k,v])=>`<div class="scene"><div class="scene-name">${k}</div><div class="scene-body">${v}</div></div>`).join("")}</div>
+    </div>
+    <a class="line-btn" href="https://lin.ee/9aEgmmc" target="_blank">LINEでもっと詳しく相談する</a>
+    <div class="line-hint">個別の部下に合ったマネジメントを一緒に考えます</div>
+    <a class="back-btn" href="${TOKUTEN_URL}">特典ページに戻る</a>
+    <button class="retry-btn" onclick="retry()">もう一度診断する</button>`;
+  document.querySelectorAll(".copy-btn").forEach(b=>b.addEventListener("click",async()=>{
+    const ok=await copyText(b.dataset.t);
+    if(ok){b.textContent="コピーしました";b.classList.add("done");}else{b.textContent="コピーできませんでした";}
+    setTimeout(()=>{b.textContent="コピー";b.classList.remove("done");},1800);
+  }));
+  window.scrollTo(0,0);
+}
+async function copyText(t){
+  try{await navigator.clipboard.writeText(t);return true;}catch(e){}
+  try{const ta=document.createElement("textarea");ta.value=t;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,t.length);const ok=document.execCommand("copy");ta.remove();return ok;}catch(e){return false;}
+}
+function retry(){cur=0;ans=new Array(Qs.length).fill(null);renderQ();}
+renderQ();
+</script>
+</body>
+</html>
